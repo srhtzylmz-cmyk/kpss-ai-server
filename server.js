@@ -34,7 +34,7 @@ headers: {
 "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
 },
 body: JSON.stringify({
-model: "gpt-4o-mini",
+model: "gpt-3.5-turbo",
 messages: [{ role: "user", content: prompt }]
 })
 }
@@ -54,4 +54,5 @@ res.status(500).json({ error: "AI çözüm hatası" });
 
 app.listen(3000, () => {
 console.log("Server çalışıyor");
+
 });
