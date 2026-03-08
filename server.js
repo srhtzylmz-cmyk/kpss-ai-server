@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const fetch = require("node-fetch"); // ✅ Node fetch
+const fetch = require("node-fetch"); // ✅ kesin çözüm
 
 const app = express();
 app.use(cors());
@@ -42,6 +42,6 @@ Doğru cevabı ve kısa açıklama yaz.
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server 3000 portunda çalışıyor");
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Server çalışıyor");
 });
