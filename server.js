@@ -1,13 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-const fetch = require("node-fetch"); // Node 18 öncesi
+const fetch = require("node-fetch"); // ✅ Node fetch
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.post("/solve", async (req, res) => {
-  const { question, options } = req.body;
+  const { question, options, userId } = req.body;
 
   const prompt = `
 KPSS sorusunu çöz.
@@ -22,27 +22,22 @@ Doğru cevabı ve kısa açıklama yaz.
 `;
 
   try {
-    const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo", // 4o-mini yerine 3.5-turbo
-          messages: [{ role: "user", content: prompt }]
-        })
-      }
-    );
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
 
     const data = await response.json();
-
-    // Mobil uygulama için sadece content döndürmek daha temiz
     res.json({ content: data.choices[0].message.content });
   } catch (error) {
-    console.error(error); // log ile Render’da görebilirsin
+    console.error(error); // Render loglarında görebilirsin
     res.status(500).json({ error: "AI çözüm hatası" });
   }
 });
