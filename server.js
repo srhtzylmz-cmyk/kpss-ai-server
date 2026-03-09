@@ -1,56 +1,39 @@
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
-const fetch = require("node-fetch"); // Node 18+ ise fetch global, bunu kaldırabilirsin
-
-const app = express(); // ✅ app burada tanımlanmalı
-app.use(cors());
-app.use(express.json());
-
-// Groq API key environment variable'dan alınır
-const API_KEY = process.env.GROQ_API_KEY;
-
-// Test endpoint
-app.get("/", (req, res) => res.send("AI Backend çalışıyor"));
-
-// /solve route
 app.post("/solve", async (req, res) => {
-  const { question, options, userId } = req.body;
+  const { question, options } = req.body;
 
-  if (!question || !options) {
+  if (!question || !options) 
     return res.status(400).json({ error: "question veya options eksik" });
-  }
 
   try {
+    const prompt = `
+Soru: ${question}
+Seçenekler: ${options.join(", ")}
+Doğru cevabı sadece tek bir harf veya seçenek olarak ver.
+`;
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${API_KEY}`
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}` // ✅ burada key gizli
       },
       body: JSON.stringify({
         model: "llama3-8b-8192",
-        messages: [
-          {
-            role: "user",
-            content: `Bu soruyu çöz: "${question}"\nSeçenekler: ${options.join(", ")}`
-          }
-        ]
+        messages: [{ role: "user", content: prompt }]
       })
     });
 
     const text = await response.text();
+
     let data;
     try {
       data = JSON.parse(text);
-    } catch (err) {
-      console.error("Groq JSON parse hatası:", text);
+    } catch {
       return res.status(500).json({ error: "Groq’dan geçersiz JSON döndü" });
     }
 
-    if (!data?.choices || data.choices.length === 0) {
+    if (!data?.choices || data.choices.length === 0) 
       return res.status(500).json({ error: "Groq cevap üretemedi" });
-    }
 
     res.json({ choices: data.choices });
 
@@ -59,7 +42,3 @@ app.post("/solve", async (req, res) => {
     res.status(500).json({ error: "AI çözümü alınamadı" });
   }
 });
-
-// Port
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server çalışıyor:", PORT));
