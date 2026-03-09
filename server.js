@@ -1,14 +1,17 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-
-dotenv.config();
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
+// API key environment variable'dan alınır
 const API_KEY = process.env.GROQ_API_KEY;
+
+app.get("/", (req, res) => {
+  res.send("AI Backend çalışıyor");
+});
 
 app.post("/ai", async (req, res) => {
   const { prompt } = req.body;
@@ -23,7 +26,10 @@ app.post("/ai", async (req, res) => {
       body: JSON.stringify({
         model: "llama3-8b-8192",
         messages: [
-          { role: "user", content: prompt }
+          {
+            role: "user",
+            content: prompt
+          }
         ]
       })
     });
@@ -32,10 +38,15 @@ app.post("/ai", async (req, res) => {
     res.json(data);
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: "AI isteği başarısız",
+      detail: error.message
+    });
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server çalışıyor");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server çalışıyor:", PORT);
 });
