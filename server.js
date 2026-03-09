@@ -1,22 +1,25 @@
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config();
+const fetch = require("node-fetch"); // Eğer Node 18+ ise fetch global zaten var
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
 // API key environment variable'dan alınır
 const API_KEY = process.env.GROQ_API_KEY;
 
-app.get("/", (req, res) => {
-  res.send("AI Backend çalışıyor");
-});
+// /solve route
+app.post("/solve", async (req, res) => {
+  const { question, options, userId } = req.body;
 
-app.post("/ai", async (req, res) => {
-  const { prompt } = req.body;
+  if (!question || !options) {
+    return res.status(400).json({ error: "question veya options eksik" });
+  }
 
   try {
+    // Groq API'ye istek
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -28,25 +31,28 @@ app.post("/ai", async (req, res) => {
         messages: [
           {
             role: "user",
-            content: prompt
+            content: `Bu soruyu çöz: "${question}"\nSeçenekler: ${options.join(", ")}`
           }
         ]
       })
     });
 
     const data = await response.json();
-    res.json(data);
 
-  } catch (error) {
-    res.status(500).json({
-      error: "AI isteği başarısız",
-      detail: error.message
+    // Cevabı frontend’e gönder
+    res.json({
+      choices: data.choices // frontend data.choices[0].message.content ile alır
     });
+
+  } catch (err) {
+    console.error("Groq API hatası:", err);
+    res.status(500).json({ error: "AI çözümü alınamadı" });
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// Test endpoint
+app.get("/", (req, res) => res.send("AI Backend çalışıyor"));
 
-app.listen(PORT, () => {
-  console.log("Server çalışıyor:", PORT);
-});
+// Port
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server çalışıyor:", PORT));
