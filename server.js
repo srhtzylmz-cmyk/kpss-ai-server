@@ -1,16 +1,3 @@
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
-const fetch = require("node-fetch"); // Eğer Node 18+ ise fetch global zaten var
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// API key environment variable'dan alınır
-const API_KEY = process.env.GROQ_API_KEY;
-
-// /solve route
 app.post("/solve", async (req, res) => {
   const { question, options, userId } = req.body;
 
@@ -19,7 +6,6 @@ app.post("/solve", async (req, res) => {
   }
 
   try {
-    // Groq API'ye istek
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -37,11 +23,24 @@ app.post("/solve", async (req, res) => {
       })
     });
 
-    const data = await response.json();
+    // Önce text al
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error("Groq JSON parse hatası:", text);
+      return res.status(500).json({ error: "Groq’dan geçersiz JSON döndü" });
+    }
 
-    // Cevabı frontend’e gönder
+    // Eğer choices yoksa fallback
+    if (!data?.choices || data.choices.length === 0) {
+      return res.status(500).json({ error: "Groq cevap üretemedi" });
+    }
+
+    // Cevabı gönder
     res.json({
-      choices: data.choices // frontend data.choices[0].message.content ile alır
+      choices: data.choices
     });
 
   } catch (err) {
@@ -49,10 +48,3 @@ app.post("/solve", async (req, res) => {
     res.status(500).json({ error: "AI çözümü alınamadı" });
   }
 });
-
-// Test endpoint
-app.get("/", (req, res) => res.send("AI Backend çalışıyor"));
-
-// Port
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server çalışıyor:", PORT));
