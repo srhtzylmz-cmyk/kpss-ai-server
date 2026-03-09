@@ -33,7 +33,7 @@ Doğru cevabı sadece tek bir harf veya seçenek olarak ver.
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}` // ✅ API key gizli
       },
       body: JSON.stringify({
-        model: "llama3-8b-8192",
+        model: "mixtral-8x7b-32768",
         messages: [{ role: "user", content: prompt }]
       })
     });
@@ -58,3 +58,4 @@ Doğru cevabı sadece tek bir harf veya seçenek olarak ver.
 // 5️⃣ Port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server çalışıyor:", PORT));
+
