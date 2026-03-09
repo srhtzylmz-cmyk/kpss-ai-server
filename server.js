@@ -1,3 +1,18 @@
+// 1️⃣ Gerekli kütüphaneler
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
+const fetch = require("node-fetch"); // Node 18+ ise bu opsiyonel
+
+// 2️⃣ Express app oluştur
+const app = express(); // ✅ app burada tanımlanmalı
+app.use(cors());
+app.use(express.json());
+
+// 3️⃣ Test endpoint
+app.get("/", (req, res) => res.send("AI Backend çalışıyor"));
+
+// 4️⃣ /solve route
 app.post("/solve", async (req, res) => {
   const { question, options } = req.body;
 
@@ -15,7 +30,7 @@ Doğru cevabı sadece tek bir harf veya seçenek olarak ver.
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}` // ✅ burada key gizli
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}` // ✅ API key gizli
       },
       body: JSON.stringify({
         model: "llama3-8b-8192",
@@ -26,11 +41,8 @@ Doğru cevabı sadece tek bir harf veya seçenek olarak ver.
     const text = await response.text();
 
     let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      return res.status(500).json({ error: "Groq’dan geçersiz JSON döndü" });
-    }
+    try { data = JSON.parse(text); } 
+    catch { return res.status(500).json({ error: "Groq’dan geçersiz JSON döndü" }); }
 
     if (!data?.choices || data.choices.length === 0) 
       return res.status(500).json({ error: "Groq cevap üretemedi" });
@@ -42,3 +54,7 @@ Doğru cevabı sadece tek bir harf veya seçenek olarak ver.
     res.status(500).json({ error: "AI çözümü alınamadı" });
   }
 });
+
+// 5️⃣ Port
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server çalışıyor:", PORT));
